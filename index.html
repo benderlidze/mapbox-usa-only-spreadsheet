@@ -7,6 +7,8 @@
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.10.0/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.10.0/mapbox-gl.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
     <style>
         body {
             margin: 0;
@@ -36,7 +38,38 @@
         });
 
         map.on('style.load', () => {
-            map.setFog({}); // Set the default atmosphere style
+
+            d3.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vTkVh0l7c5Gy6DrQ25RhKO2pMB9C5J_axN4thpoh_SWdDYp2h3rvphUkFcoFxKSN9XJjsv6vJo7raVI/pub?gid=1186833163&single=true&output=csv")
+                .then(json => {
+                    console.log('json', json);
+                    const features = json.map(pin => {
+                        const { LATITUDE: lat, LONGITUDE: lon } = pin
+                        return turf.point([+lon, +lat], { ...pin })
+                    })
+
+                    map.getSource("main").setData(turf.featureCollection(features))
+                })
+
+
+            map.addSource('main', {
+                'type': 'geojson',
+                'data': {
+                    'type': 'FeatureCollection',
+                    'features': []
+                }
+            });
+
+            map.addLayer({
+                'id': 'pins',
+                'type': 'circle',
+                'source': 'main',
+                'paint': {
+                    'circle-radius': 6,
+                    'circle-color': '#B42222'
+                },
+                'filter': ['==', '$type', 'Point']
+            });
+
         });
     </script>
 
