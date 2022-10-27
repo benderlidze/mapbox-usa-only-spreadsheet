@@ -21,10 +21,24 @@
             bottom: 0;
             width: 100%;
         }
+
+        #infoDiv {
+            font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+            background-color: #fff;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            border-radius: 3px;
+            position: absolute;
+            width: fit-content;
+            top: 10px;
+            left: 10px;
+            padding: 10px;
+            z-index: 100;
+        }
     </style>
 </head>
 
 <body>
+    <div id="infoDiv"></div>
     <div id="map"></div>
     <script>
         mapboxgl.accessToken = 'pk.eyJ1IjoiZ2FyYWdlc3RvcmllcyIsImEiOiJjbDd1ejUzZnQwNmdlM29vNnlwbzMydGFiIn0.QCfYzbFZjibYumdnCySUdw';
@@ -39,17 +53,46 @@
 
         map.on('style.load', () => {
 
-            d3.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vTkVh0l7c5Gy6DrQ25RhKO2pMB9C5J_axN4thpoh_SWdDYp2h3rvphUkFcoFxKSN9XJjsv6vJo7raVI/pub?gid=1186833163&single=true&output=csv")
+            d3.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQBvstvSh5604AbKjeQj_WOpek94K868qD8LZZuz_cWUfG-cI5YYOfGLSje7ZP3ThUEqTUMa1INGNWV/pub?gid=1186833163&single=true&output=csv")
                 .then(json => {
                     console.log('json', json);
                     const features = json.map(pin => {
                         const { LATITUDE: lat, LONGITUDE: lon } = pin
-                        return turf.point([+lon, +lat], { ...pin })
+                        return turf.point([+lon, +lat], { icon_image: pin.VENUE.toLowerCase() + "-u", ...pin })
+                    })
+                    const collection = turf.featureCollection(features)
+                    console.log('collection', collection);
+                    map.getSource("main").setData(collection)
+
+                    const venue = [...new Set(json.map(pin => pin.VENUE))]
+                    const cities = [...new Set(json.map(pin => pin.CITY))]
+
+                    fillDropDown(venue, id => {
+                        console.log('id', id);
+                        const filtered = collection.features.filter(d => d.properties.VENUE === id)
+                        const collectionFiltered = turf.featureCollection(filtered)
+                        map.getSource("main").setData(collectionFiltered)
                     })
 
-                    map.getSource("main").setData(turf.featureCollection(features))
-                })
+                    map.setFilter("settlement-minor-label", ['in', 'name', ...cities])
+                    map.setFilter("settlement-major-label", ['in', 'name', ""])
+                    map.setFilter("settlement-major-label", ['in', 'name', ""])
 
+                    venue.forEach(d => {
+                        const name = d.toLowerCase();
+                        map.loadImage(`icons/${name}.png`, (error, image) => {
+                            if (error) {
+                                return;
+                            } else {
+                                console.log('name', name);
+                                //add prefix name since museum is already there "-u"
+                                map.addImage(name + "-u", image);
+                            }
+                        })
+
+                    })
+
+                })
 
             map.addSource('main', {
                 'type': 'geojson',
@@ -64,13 +107,85 @@
                 'type': 'circle',
                 'source': 'main',
                 'paint': {
-                    'circle-radius': 6,
-                    'circle-color': '#B42222'
+                    'circle-radius': 12,
+                    "circle-color": "white",
+                    "circle-stroke-color": "#0266ff",
+                    'circle-stroke-width': 3
                 },
-                'filter': ['==', '$type', 'Point']
+            }, 'settlement-minor-label');
+
+            map.addLayer({
+                'id': 'points',
+                'type': 'symbol',
+                'source': 'main', // reference the data source
+                'layout': {
+                    'icon-image': ['get', 'icon_image'], // reference the image
+                    'icon-size': 0.03,
+                    'icon-ignore-placement': true,
+                    'icon-allow-overlap': true,
+                }
+            }, 'settlement-minor-label');
+
+            // map.addLayer({
+            //     id: 'storeLogo',
+            //     'type': 'symbol',
+            //     source: 'main',
+            //     'layout': {
+            //         'icon-image': ['get', 'icon_image'], // reference the image
+            //         'icon-size': 0.05,
+            //         'icon-allow-overlap': true,
+            //     }
+            // });
+
+            map.on('click', 'pins', (e) => {
+                console.log('e', e.features[0]);
+            });
+            map.on('mouseenter', 'pins', () => {
+                map.getCanvas().style.cursor = 'pointer';
+            });
+            // Change it back to a pointer when it leaves.
+            map.on('mouseleave', 'pins', () => {
+                map.getCanvas().style.cursor = '';
             });
 
+            map.on('click', 'settlement-minor-label', (e) => {
+                map.flyTo({
+                    center: e.features[0].geometry.coordinates,
+                    zoom: 14
+                });
+            });
+            map.on('mouseenter', 'settlement-minor-label', () => {
+                map.getCanvas().style.cursor = 'pointer';
+            });
+            // Change it back to a pointer when it leaves.
+            map.on('mouseleave', 'settlement-minor-label', () => {
+                map.getCanvas().style.cursor = '';
+            });
+
+
         });
+
+        function fillDropDown(data, action) {
+            console.log('data', data);
+            const selectList = document.createElement("select");
+            selectList.id = "mySelect";
+            infoDiv.appendChild(selectList)
+            selectList.addEventListener("change", d => {
+                const id = selectList.value
+                if (typeof action === "function") {
+                    action(id)
+                }
+            })
+            data
+                .sort((a, b) => a.localeCompare(b))
+                .map(p => {
+                    const option = document.createElement("option");
+                    option.value = p;
+                    option.text = p;
+                    selectList.appendChild(option);
+                })
+
+        }
     </script>
 
 </body>
