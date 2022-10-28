@@ -65,7 +65,12 @@
         });
         map.addControl(new mapboxgl.NavigationControl());
 
+
         map.on('style.load', () => {
+
+            map.setFilter("settlement-major-label", ['in', 'name', ""])
+            map.setFilter("settlement-major-label", ['in', 'name', ""])
+            map.setFilter("poi-label", ['in', 'name', ""]) //  remove poi
 
             d3.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQBvstvSh5604AbKjeQj_WOpek94K868qD8LZZuz_cWUfG-cI5YYOfGLSje7ZP3ThUEqTUMa1INGNWV/pub?gid=1186833163&single=true&output=csv")
                 .then(json => {
@@ -96,9 +101,7 @@
                     })
 
                     map.setFilter("settlement-minor-label", ['in', 'name', ...cities])
-                    map.setFilter("settlement-major-label", ['in', 'name', ""])
-                    map.setFilter("settlement-major-label", ['in', 'name', ""])
-                    map.setFilter("poi-label", ['in', 'name', ""]) //  remove poi
+
 
                     venue.forEach(d => {
                         const name = d.toLowerCase();
