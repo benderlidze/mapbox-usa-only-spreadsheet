@@ -120,6 +120,10 @@
       left: 50%;
       transform: translate(-50%, -50%);
     }
+
+    .mapboxgl-popup {
+      max-width: 350px !important;
+    }
   </style>
 </head>
 
@@ -276,18 +280,24 @@
         while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
           coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
         }
+
+        const info = ['CONTACT',
+          'CITY',
+          'DIMENSION',
+          'PAST EXHIBITIONS',
+          'PARTNERS',
+          'INFO']
+
+        const infoData = Object.entries(data).filter(d => d[1] && d[1] !== "" && info.includes(d[0])).map(d => {
+          return `<div>${d[0]}:${d['1']}</div>`
+        }).join("")
         const description = `
                     <div>
                         <h3>${data['NAME']}</h3>
                         <div><b>${data['VENUE']}</b></div>
                         <div>ADDRESS:${data['ADDRESS']}</div>
                         <div><a href="${data['WEBSITE']}" target="_blank">${data['WEBSITE']}</a></div>
-                        <div>CONTACT:${data['CONTACT']}</div>
-                        <div>CITY:${data['CITY']}</div>
-                        <div>DIMENSION:${data['DIMENSION']}</div>
-                        <div>PAST EXHIBITIONS:${data['PAST EXHIBITIONS']}</div>
-                        <div>PARTNERS:${data['PARTNERS']}</div>
-                        <div>INFO:${data['INFO']}</div>
+                        ${infoData}
                     </div >
 
                 `
