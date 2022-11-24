@@ -128,7 +128,9 @@
 </head>
 
 <body>
-    <div id="infoDiv"></div>
+    <div id="infoDiv">
+        <b>Interactive map for "Immersive Spaces"</b>
+    </div>
     <div id="map"></div>
     <script>
         const switchersEnableDiv = document.getElementById("infoDiv")
@@ -138,16 +140,16 @@
         };
 
         const colors = [
-            { color: "#ffe59a", name: 'Art Gallery' },
-            { color: "#e6b8af", name: 'Cultural & Social Center' },
-            { color: "#d9d9d9", name: 'Empty Space' },
-            { color: "#d9d1e9", name: 'Entertainment Venue' },
-            { color: "#ead1db", name: 'Exhibitor' },
-            { color: "#f9cb9c", name: 'Gaming Space' },
-            { color: "#c9daf8", name: 'Museum' },
-            { color: "#d9ead3", name: 'Retail Venue' },
-            { color: "#a3c4c9", name: 'Theather & Cinema' },
-            { color: "#6d9eeb", name: 'Festivals' }
+            { color: "red", name: 'Art Gallery' },
+            { color: "green", name: 'Cultural & Social Center' },
+            { color: "blue", name: 'Empty Space' },
+            { color: "yellow", name: 'Entertainment Venue' },
+            { color: "orange", name: 'Exhibitor' },
+            { color: "pink", name: 'Gaming Space' },
+            { color: "violet", name: 'Museum' },
+            { color: "Purple", name: 'Retail Venue' },
+            { color: "navy", name: 'Theather & Cinema' },
+            { color: "aqua", name: 'Festivals' }
         ]
 
         mapboxgl.accessToken = 'pk.eyJ1IjoiZ2FyYWdlc3RvcmllcyIsImEiOiJjbDd1ejUzZnQwNmdlM29vNnlwbzMydGFiIn0.QCfYzbFZjibYumdnCySUdw';
@@ -293,13 +295,13 @@
                 ]
 
                 const infoData = Object.entries(data).filter(d => d[1] && d[1] !== "" && info.includes(d[0])).map(d => {
-                    return `<div>${d[0]}:${d['1']}</div>`
+                    return `<div>${d[0]}: ${d['1']}</div>`
                 }).join("")
                 const description = `
                     <div>
                         <h3>${data['NAME']}</h3>
                         <div><b>${data['VENUE']}</b></div>
-                        <div>ADDRESS:${data['ADDRESS']}</div>
+                        <div>ADDRESS: ${data['ADDRESS']}</div>
                         <div><a href="${data['WEBSITE']}" target="_blank">${data['WEBSITE']}</a></div>
                         ${infoData}
                     </div >
@@ -309,6 +311,11 @@
                     .setLngLat(coordinates)
                     .setHTML(description)
                     .addTo(map);
+
+                map.flyTo({
+                    center: e.features[0].geometry.coordinates,
+                    zoom: 14
+                });
             });
 
             map.on('mouseenter', 'pins', () => {
