@@ -198,6 +198,20 @@
                     //     const collectionFiltered = turf.featureCollection(filtered)
                     //     map.getSource("main").setData(collectionFiltered)
                     // })
+                    switchersEnableDiv.appendChild(buildSwitcher("Select All / Deselect All", checked => {
+                        document.getElementsByTagName("input")
+                        if (checked) {
+                            colors.forEach(d => main.filters.add(d.name))
+                            document.querySelectorAll(".checkbox").forEach(d => d.checked = true)
+                        } else {
+                            main.filters.clear()
+                            document.querySelectorAll(".checkbox").forEach(d => d.checked = false)
+                        }
+                        //update pins 
+                        const filteredPins = main.data.filter(d => main.filters.has(d.properties.VENUE)).map(d => d)
+                        map.getSource("main").setData(turf.featureCollection(filteredPins))
+                    }, true))
+
 
                     venue.map(d => {
                         main.filters.add(d)
@@ -209,10 +223,11 @@
                             }
                             //update pins 
                             const filteredPins = main.data.filter(d => main.filters.has(d.properties.VENUE)).map(d => d)
-                            console.log('filteredPins', filteredPins);
                             map.getSource("main").setData(turf.featureCollection(filteredPins))
                         }, true))
                     })
+
+
 
                     map.setFilter("settlement-minor-label", ['in', 'name', ...cities])
 
@@ -373,6 +388,7 @@
 
             const checkbox = document.createElement("input")
             checkbox.type = "checkbox"
+            checkbox.className = "checkbox"
             checkbox.checked = checked
             checkbox.addEventListener("input", () => {
                 if (typeof action === "function") {
@@ -392,7 +408,6 @@
             color.style.borderRadius = "10px"
             color.style.border = "2px solid #2196f3"
 
-
             const text = document.createElement("div")
             text.innerText = labelText
 
@@ -403,6 +418,7 @@
             div.appendChild(color)
             div.appendChild(text)
 
+            console.log('div', div);
             return div
         }
 
