@@ -129,7 +129,7 @@
 
 <body>
     <div id="infoDiv">
-        <b>Interactive map for "Immersive Spaces"</b>
+        <h2>Immersive Spaces</h2>
     </div>
     <div id="map"></div>
     <script>
@@ -315,6 +315,7 @@
                 const description = `
                     <div>
                         <h3>${data['NAME']}</h3>
+                        <h2>${data['TITTLE']}</h2>
                         <div><b>${data['VENUE']}</b></div>
                         <div>ADDRESS: ${data['ADDRESS']}</div>
                         <div><a href="${data['WEBSITE']}" target="_blank">${data['WEBSITE']}</a></div>
@@ -328,7 +329,7 @@
                     .addTo(map);
 
                 map.flyTo({
-                    center: e.features[0].geometry.coordinates,
+                    center: coordinates,
                     zoom: 14
                 });
             });
