@@ -176,10 +176,10 @@
                     const features = json.map(pin => {
                         const { LATITUDE: lat, LONGITUDE: lon } = pin
                         console.log('pin', pin);
-                        const color = colors.find(d => d.name.toLowerCase() === pin.VENUE.toLowerCase())
+                        const color = colors.find(d => d.name.toLowerCase() === pin['VENUE TYPE'].toLowerCase())
                         return turf.point([+lon, +lat], {
                             color: color ? color.color : "black",
-                            icon_image: pin.VENUE.toLowerCase() + "-u",
+                            icon_image: pin['VENUE TYPE'].toLowerCase() + "-u",
                             ...pin
                         })
                     })
@@ -188,7 +188,7 @@
                     map.getSource("main").setData(collection)
                     main.data.push(...features)
 
-                    const venue = [...new Set(json.map(pin => pin.VENUE))]
+                    const venue = [...new Set(json.map(pin => pin['VENUE TYPE']))]
                     const cities = [...new Set(json.map(pin => pin.CITY))]
 
                     // fillDropDown(venue, id => {
@@ -208,7 +208,7 @@
                             document.querySelectorAll(".checkbox").forEach(d => d.checked = false)
                         }
                         //update pins 
-                        const filteredPins = main.data.filter(d => main.filters.has(d.properties.VENUE)).map(d => d)
+                        const filteredPins = main.data.filter(d => main.filters.has(d.properties['VENUE TYPE'])).map(d => d)
                         map.getSource("main").setData(turf.featureCollection(filteredPins))
                     }, true))
 
@@ -222,7 +222,7 @@
                                 main.filters.delete(d)
                             }
                             //update pins 
-                            const filteredPins = main.data.filter(d => main.filters.has(d.properties.VENUE)).map(d => d)
+                            const filteredPins = main.data.filter(d => main.filters.has(d.properties['VENUE TYPE'])).map(d => d)
                             map.getSource("main").setData(turf.featureCollection(filteredPins))
                         }, true))
                     })
@@ -231,18 +231,18 @@
 
                     map.setFilter("settlement-minor-label", ['in', 'name', ...cities])
 
-                    venue.forEach(d => {
-                        const name = d.toLowerCase();
-                        map.loadImage(`icons/${name}.png`, (error, image) => {
-                            if (error) {
-                                return;
-                            } else {
-                                console.log('name', name);
-                                //add prefix name since museum is already there "-u"
-                                map.addImage(name + "-u", image);
-                            }
-                        })
-                    })
+                    // venue.forEach(d => {
+                    //     const name = d.toLowerCase();
+                    //     map.loadImage(`icons/${name}.png`, (error, image) => {
+                    //         if (error) {
+                    //             return;
+                    //         } else {
+                    //             console.log('name', name);
+                    //             //add prefix name since museum is already there "-u"
+                    //             map.addImage(name + "-u", image);
+                    //         }
+                    //     })
+                    // })
                 })
 
             map.addSource('main', {
@@ -314,9 +314,10 @@
                 }).join("")
                 const description = `
                     <div>
-                        <h3>${data['NAME']}</h3>
+                        <h3>${data['NAME VENUE']}</h3>
                         <h2>${data['TITTLE']}</h2>
-                        <div><b>${data['VENUE']}</b></div>
+                        <b>${data['NAME']}</b>
+                        <div><b>${data['VENUE TYPE']}</b></div>
                         <div>ADDRESS: ${data['ADDRESS']}</div>
                         <div><a href="${data['WEBSITE']}" target="_blank">${data['WEBSITE']}</a></div>
                         ${infoData}
