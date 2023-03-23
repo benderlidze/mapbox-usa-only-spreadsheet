@@ -9,30 +9,44 @@
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.10.0/mapbox-gl.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
     <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+
     <style>
+        @font-face {
+            font-family: 'OnTheRoad';
+            src: URL('fonts/OnTheRoad.ttf') format('truetype');
+        }
+
         body {
             margin: 0;
             padding: 0;
         }
 
         #map {
-            position: absolute;
-            top: 0;
-            bottom: 0;
             width: 100%;
+            height: 100%;
         }
 
         #infoDiv {
             font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
-            background-color: #fff;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            background-color: #f0f0f0;
             border-radius: 3px;
-            position: absolute;
             width: fit-content;
-            top: 10px;
-            left: 10px;
             padding: 10px;
-            z-index: 100;
+        }
+
+        .title {
+            font-size: 36pt;
+            font-family: 'Ontheroad', Regular;
+        }
+
+        .america {
+            font-family: 'GT America', Regular;
+        }
+
+        .intro {
+            padding: 20px;
+            font-size: 12pt;
+
         }
 
 
@@ -40,6 +54,7 @@
             display: flex;
             align-items: center;
             margin: 5px;
+            font-size: 12pt;
         }
 
         .switcher-div>div {
@@ -52,6 +67,7 @@
             display: inline-block;
             width: 35px;
             height: 15px;
+            border: 2px solid black;
         }
 
         .switch input {
@@ -67,7 +83,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: #ccc;
+            /* background-color: #ccc; */
             -webkit-transition: 0.4s;
             transition: 0.4s;
         }
@@ -75,17 +91,15 @@
         .slider:before {
             position: absolute;
             content: "";
-            height: 11px;
-            width: 11px;
-            left: 3px;
-            bottom: 2px;
+            height: 15px;
+            width: 17px;
             background-color: white;
             -webkit-transition: 0.4s;
             transition: 0.4s;
         }
 
         input:checked+.slider {
-            background-color: #2196f3;
+            /* background-color: #2196f3; */
         }
 
         input:focus+.slider {
@@ -100,11 +114,11 @@
 
         /* Rounded sliders */
         .slider.round {
-            border-radius: 34px;
+            /* border-radius: 34px; */
         }
 
         .slider.round:before {
-            border-radius: 50%;
+            /* border-radius: 50%; */
         }
 
         #loading {
@@ -122,16 +136,88 @@
         }
 
         .mapboxgl-popup {
-            max-width: 350px !important;
+            max-width: 450px !important;
+        }
+
+
+        .main {
+            display: flex;
+            flex-direction: row;
+            height: 100vh;
+        }
+
+        .left {
+            width: 300px;
+            max-width: 350px;
+            background-color: white;
+            padding: 10px;
+        }
+
+        .right {
+            flex: 1;
+        }
+
+        .left>.switcher-div {
+            border-top: 2px solid black;
+            padding: 25px 20px;
+
+        }
+
+        .left>.switcher-div:last-child {
+            border-bottom: 2px solid black;
+        }
+
+        .custom-popup .mapboxgl-popup-content {
+            background-color: aquamarine;
+        }
+
+        h2 {
+            padding: 0px;
+            margin: 5px 0px;
+            font-size: 20pt;
+            line-height: 25px;
+        }
+
+        h3 {
+            padding: 0px;
+            margin: 0px;
+            font-size: 11pt;
+            font-weight: bold;
+        }
+
+        /* table no borders */
+        table {
+            margin-top: 20px;
+            border-collapse: collapse;
+            border-spacing: 0;
+            width: 100%;
+            font-size: 11pt;
+        }
+
+        table tr {
+            vertical-align: top;
+        }
+
+        table tr td:first-child {
+            padding-right: 25px;
         }
     </style>
 </head>
 
 <body>
-    <div id="infoDiv">
-        <h2>Immersive Spaces</h2>
+    <div class="main">
+        <div class="left" id="infoDiv">
+            <div class="title">Immersive Spaces</div>
+            <div class="intro"> Introduction Ad quodiata non numqui voloreprae sequiat asperem ut mini reium quia con
+                rehentium quiatus in essuntinis dolorem similli sitatia dolorum con et magnime officietur, sequi oditiis
+                ciendam neceriasit et, occatibus exerunt voluptum.
+            </div>
+        </div>
+        <div class="right">
+            <div id="map"></div>
+        </div>
     </div>
-    <div id="map"></div>
+
     <script>
         const switchersEnableDiv = document.getElementById("infoDiv")
         const main = {
@@ -141,15 +227,15 @@
 
         const colors = [
             { color: "red", name: 'Art Gallery' },
-            { color: "green", name: 'Cultural & Social Center' },
+            { color: "green", name: 'Cultural & Social Center', fontColor: "white" },
             // { color: "blue", name: 'Empty Space' },
             { color: "yellow", name: 'Entertainment Venue' },
             { color: "orange", name: 'Exhibitor' },
             { color: "pink", name: 'Gaming Space' },
             { color: "violet", name: 'Museum' },
             //{ color: "Purple", name: 'Retail Venue' },
-            { color: "Purple", name: 'Rental Venue' },
-            { color: "navy", name: 'Theather & Cinema' },
+            { color: "Purple", name: 'Rental Venue', fontColor: "white" },
+            { color: "navy", name: 'Theather & Cinema', fontColor: "white" },
             { color: "aqua", name: 'Festivals' }
         ]
 
@@ -176,7 +262,6 @@
                     console.log('json', json);
                     const features = json.map(pin => {
                         const { LATITUDE: lat, LONGITUDE: lon } = pin
-                        console.log('pin', pin);
                         const color = colors.find(d => d.name.toLowerCase() === pin['VENUE TYPE'].toLowerCase())
                         return turf.point([+lon, +lat], {
                             color: color ? color.color : "black",
@@ -261,12 +346,12 @@
             // }, 'settlement-minor-label');
 
             map.addLayer({
-                'id': 'points',
+                'id': 'pins',
                 'type': 'symbol',
                 'source': 'main', // reference the data source
                 'layout': {
                     'icon-image': ['get', 'VENUE TYPE'],
-                    'icon-size': 1,
+                    'icon-size': 0.85,
                     'icon-allow-overlap': true,
                 }
             }, 'settlement-minor-label');
@@ -297,18 +382,35 @@
                     return `<div>${d[0]}: ${d['1']}</div>`
                 }).join("")
                 const description = `
-                    <div>
+                    <div style="padding:25px;">
                         <h2>${data['NAME VENUE']}</h2>
-                        <h3>${data['TITTLE']}</h3>
-                        <b>${data['NAME']}</b>
-                        <div><b>${data['VENUE TYPE']}</b></div>
-                        <div>ADDRESS: ${data['ADDRESS']}</div>
-                        <div><a href="${data['WEBSITE']}" target="_blank">${data['WEBSITE']}</a></div>
-                        ${infoData}
-                    </div >
+                        <h3>${data['VENUE TYPE']}</h3>
+
+                        <table class="table">
+                            <tr>
+                                <td>ADDRESS</td>
+                                <td>${data['ADDRESS']}</td>
+                            </tr>
+                            <tr>
+                                <td>WEBSITE</td>
+                                <td><a href="${data['WEBSITE']}" target="_blank">${data['WEBSITE']}</a></td>
+                            </tr>
+                            <tr>
+                                <td>CONTACT</td>
+                                <td>${data['CONTACT']}</td>
+                            </tr>
+                            <tr>
+                                <td>CITY</td>
+                                <td>${data['CITY']}</td>
+                            </tr>
+                        </table>
+
+                      
+                        
+                    </div>
 
                 `
-                new mapboxgl.Popup()
+                new mapboxgl.Popup({ className: data.color })
                     .setLngLat(coordinates)
                     .setHTML(description)
                     .addTo(map);
@@ -387,12 +489,22 @@
 
             const pinColor = colors.find(d => d.name.toLowerCase() === labelText.toLowerCase())
 
-            const color = document.createElement("div")
-            color.style.width = "10px"
-            color.style.height = "10px"
-            color.style.backgroundColor = pinColor ? pinColor.color : "black"
-            // color.style.borderRadius = "10px"
-            // color.style.border = "2px solid #2196f3"
+            // const color = document.createElement("div")
+            // color.style.width = "10px"
+            // color.style.height = "10px"
+            // color.style.backgroundColor = bgColor
+
+            const bgColor = pinColor ? pinColor.color : "black"
+            const bgFontColor = pinColor ? pinColor.fontColor : "black"
+            document.body.appendChild(Object.assign(document.createElement("style"), {
+                textContent: `
+                .${bgColor}:before {background-color: ${bgColor} !important}
+                .${bgColor} .mapboxgl-popup-content {background-color: ${bgColor} !important; color: ${bgFontColor} !important}
+                .${bgColor} .mapboxgl-popup-tip {border: none !important}
+                .${bgColor} .mapboxgl-popup-close-button {font-size: 34px; font-family: serif; color: ${bgFontColor} !important}
+                `
+            }))
+            span.classList.add(bgColor)
 
             const text = document.createElement("div")
             text.innerText = labelText
@@ -401,10 +513,9 @@
             label.appendChild(span)
 
             div.appendChild(label)
-            div.appendChild(color)
             div.appendChild(text)
 
-            console.log('div', div);
+
             return div
         }
 
