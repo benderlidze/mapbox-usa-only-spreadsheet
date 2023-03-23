@@ -16,9 +16,21 @@
             src: URL('fonts/Ontheroad-Regular.otf') format('truetype');
         }
 
-        body {
+        @font-face {
+            font-family: 'GTAmerica';
+            src: URL('fonts/GT-America-Mono-Regular-Trial.otf') format('truetype');
+        }
+
+        * {
+            font-size: 100%;
+            font-family: 'GTAmerica';
+        }
+
+        body,
+        html {
             margin: 0;
             padding: 0;
+
         }
 
         #map {
@@ -149,7 +161,7 @@
 
         .left {
             width: 270px;
-            max-width: 270px;
+            max-width: 340px;
             background-color: white;
             padding: 10px;
         }
@@ -160,7 +172,7 @@
 
         .left>.switcher-div {
             border-top: 2px solid black;
-            padding: 15px 20px;
+            padding: 15px 10px;
 
         }
 
@@ -185,6 +197,10 @@
             margin: 0px;
             font-size: 11pt;
             font-weight: bold;
+            font-family: 'GTAmerica';
+            /* capital letters; */
+            text-transform: uppercase;
+
         }
 
         /* table no borders */
@@ -339,7 +355,7 @@
 
 
                     const buttonDiv = document.createElement("div")
-                    buttonDiv.style = "display: flex; flex-direction: row;border-top: 2px solid black;padding:20px;"
+                    buttonDiv.style = "display: flex; flex-direction: row;border-top: 2px solid black;padding:15px;"
 
                     const plus = document.createElement("div")
                     plus.className = "plus-button"
@@ -439,7 +455,7 @@
                     return `<div>${d[0]}: ${d['1']}</div>`
                 }).join("")
                 const description = `
-                    <div style="padding:25px;">
+                    <div style="padding:15px;overflow:hidden">
                         <h2>${data['NAME VENUE']}</h2>
                         <h3>${data['VENUE TYPE']}</h3>
 
