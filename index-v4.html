@@ -147,8 +147,8 @@
         }
 
         .left {
-            width: 300px;
-            max-width: 350px;
+            width: 270px;
+            max-width: 270px;
             background-color: white;
             padding: 10px;
         }
@@ -393,7 +393,7 @@
                             </tr>
                             <tr>
                                 <td>WEBSITE</td>
-                                <td><a href="${data['WEBSITE']}" target="_blank">${data['WEBSITE']}</a></td>
+                                <td><a style="color:inherit; text-decoration:none" href="${data['WEBSITE']}" target="_blank">${data['WEBSITE']}</a></td>
                             </tr>
                             <tr>
                                 <td>CONTACT</td>
@@ -404,13 +404,10 @@
                                 <td>${data['CITY']}</td>
                             </tr>
                         </table>
-
-                      
-                        
                     </div>
 
                 `
-                new mapboxgl.Popup({ className: data.color })
+                new mapboxgl.Popup({ className: data.color, offset: [0, -15] })
                     .setLngLat(coordinates)
                     .setHTML(description)
                     .addTo(map);
