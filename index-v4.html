@@ -13,7 +13,7 @@
     <style>
         @font-face {
             font-family: 'OnTheRoad';
-            src: URL('fonts/OnTheRoad.ttf') format('truetype');
+            src: URL('fonts/Ontheroad-Regular.otf') format('truetype');
         }
 
         body {
@@ -37,6 +37,7 @@
         .title {
             font-size: 36pt;
             font-family: 'Ontheroad', Regular;
+            line-height: 36pt;
         }
 
         .america {
@@ -201,6 +202,33 @@
         table tr td:first-child {
             padding-right: 25px;
         }
+
+        .plus-button {
+            width: 30px;
+            height: 30px;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            border: 2px solid black;
+            border-right: none;
+            user-select: none;
+            font-size: 15pt;
+        }
+
+        .minus-button {
+            width: 30px;
+            height: 30px;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            border: 2px solid black;
+            user-select: none;
+            font-size: 15pt;
+        }
     </style>
 </head>
 
@@ -292,7 +320,6 @@
                         map.getSource("main").setData(turf.featureCollection(filteredPins))
                     }, true))
 
-
                     venue.map(d => {
                         main.filters.add(d)
                         switchersEnableDiv.appendChild(buildSwitcher(d, checked => {
@@ -308,6 +335,34 @@
                     })
 
                     map.setFilter("settlement-minor-label", ['in', 'name', ...cities])
+
+
+                    const buttonDiv = document.createElement("div")
+                    buttonDiv.style = "display: flex; flex-direction: row;border-top: 2px solid black;padding:20px;"
+
+                    const plus = document.createElement("div")
+                    plus.className = "plus-button"
+                    plus.innerHTML = "+"
+                    plus.addEventListener("click", () => {
+                        map.flyTo({
+                            center: map.getCenter(),
+                            zoom: map.getZoom() + 1,
+                            essential: true // this animation is considered essential with respect to prefers-reduced-motion
+                        });
+                    })
+                    const minus = document.createElement("div")
+                    minus.className = "minus-button"
+                    minus.innerHTML = "-"
+                    minus.addEventListener("click", () => {
+                        map.flyTo({
+                            center: map.getCenter(),
+                            zoom: map.getZoom() - 1,
+                            essential: true // this animation is considered essential with respect to prefers-reduced-motion
+                        });
+                    })
+                    buttonDiv.appendChild(plus)
+                    buttonDiv.appendChild(minus)
+                    switchersEnableDiv.appendChild(buttonDiv)
 
                 })
 
