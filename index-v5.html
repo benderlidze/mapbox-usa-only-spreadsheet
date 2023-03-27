@@ -267,7 +267,8 @@
         const switchersEnableDiv = document.getElementById("infoDiv")
         const main = {
             data: [],
-            filters: new Set()
+            filters: new Set(),
+            cities: new Set(),
         };
 
         const colors = [
@@ -320,8 +321,12 @@
                     map.getSource("main").setData(collection)
                     main.data.push(...features)
 
+
+
                     const venue = [...new Set(json.map(pin => pin['VENUE TYPE']))]
                     const cities = [...new Set(json.map(pin => pin.CITY))]
+
+                    main.data.cities.push(...cities)
 
                     switchersEnableDiv.appendChild(buildSwitcher("Select All / Deselect All", checked => {
                         document.getElementsByTagName("input")
