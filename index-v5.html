@@ -250,20 +250,22 @@
         .city-marker {
             background-color: white;
             border: 2px solid black;
-            padding: 10px 10px 10px 20px;
+            padding: 2px 10px 0px 10px;
             display: flex;
             align-items: center;
             cursor: pointer;
             user-select: none;
             justify-content: center;
+            font-family: 'GTAmerica';
         }
 
         .city-marker::before {
             content: "";
             display: inline-block;
-            width: 10px;
-            height: 10px;
+            width: 7px;
+            height: 7px;
             margin-right: 5px;
+            margin-bottom: 3px;
             background-color: black;
         }
     </style>
@@ -322,7 +324,7 @@
 
         map.on('style.load', () => {
 
-            //map.setFilter("settlement-minor-label", ['in', 'name', ""])
+            map.setFilter("settlement-minor-label", ['in', 'name', ""])
             map.setFilter("settlement-major-label", ['in', 'name', ""])
             map.setFilter("settlement-major-label", ['in', 'name', ""])
             map.setFilter("poi-label", ['in', 'name', ""]) //  remove poi
@@ -437,9 +439,20 @@
                                 essential: true // this animation is considered essential with respect to prefers-reduced-motion
                             });
                         })
-                        const marker = new mapboxgl.Marker(el)
+                        const { x, y } = el.getBoundingClientRect()
+
+                        const marker = new mapboxgl.Marker(el, {
+                            offset: [-16, 0],
+                            anchor: "left"
+                        })
                             .setLngLat([+c.longitude, +c.latitude])
                             .addTo(map);
+
+
+                        // new mapboxgl.Marker()
+                        //     .setLngLat([+c.longitude, +c.latitude])
+                        //     .addTo(map);
+
                         return marker
                     })
                     main.cityMarkers.push(...mapCities)
