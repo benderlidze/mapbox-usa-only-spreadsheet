@@ -44,6 +44,7 @@
             border-radius: 3px;
             width: fit-content;
             padding: 10px;
+            overflow-y: scroll;
         }
 
         .title {
@@ -275,9 +276,9 @@
     <div class="main">
         <div class="left" id="infoDiv">
             <div class="title">Immersive Spaces</div>
-            <div class="intro"> IMMERSIVE SPACES is a new program created by the French Institute of the United
-                States–Villa Albertine in partnership with the French Institute in Paris dedicated to create a network
-                of French immersive experiences and exhibitions in the US.
+            <div class="intro"> Immersive Spaces is a new program created by Villa Albertine in partnership with the
+                Institut Français (Paris) that pairs venues in the United States with France-based creators and cultural
+                institutions to foster collaboration around immersive art between the two countries.
             </div>
         </div>
         <div class="right">
@@ -300,7 +301,7 @@
             { color: "green", name: 'Cultural & Social Center', fontColor: "white" },
             // { color: "blue", name: 'Empty Space' },
             { color: "yellow", name: 'Entertainment Venue' },
-            { color: "orange", name: 'Exhibitor' },
+            { color: "orange", name: 'Exhibitor', displayName: 'Exhibitors' },
             { color: "pink", name: 'Gaming Space' },
             { color: "violet", name: 'Museum' },
             //{ color: "Purple", name: 'Retail Venue' },
@@ -377,6 +378,7 @@
 
                     venue.map(d => {
                         main.filters.add(d)
+                        console.log('d', d);
                         switchersEnableDiv.appendChild(buildSwitcher(d, checked => {
                             if (checked) {
                                 main.filters.add(d)
@@ -659,7 +661,7 @@
             span.classList.add(bgColor)
 
             const text = document.createElement("div")
-            text.innerText = labelText
+            text.innerText = pinColor && pinColor.displayName ? pinColor.displayName : labelText
 
             label.appendChild(checkbox)
             label.appendChild(span)
