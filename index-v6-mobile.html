@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Display a map on a webpage</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.10.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.10.0/mapbox-gl.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+
+    <style>
+        @font-face {
+            font-family: 'OnTheRoad';
+            src: URL('fonts/Ontheroad-Regular.otf') format('truetype');
+        }
+
+        @font-face {
+            font-family: 'GTAmerica';
+            src: URL('fonts/GT-America-Mono-Regular-Trial.otf') format('truetype');
+        }
+
+        * {
+            font-size: 100%;
+            font-family: 'GTAmerica';
+        }
+
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        #infoDiv {
+            font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+            background-color: #f0f0f0;
+            border-radius: 3px;
+            width: 350px;
+            overflow-y: scroll;
+        }
+
+        .title {
+            font-size: 36pt;
+            font-family: 'Ontheroad', Regular;
+            line-height: 36pt;
+        }
+
+        .america {
+            font-family: 'GT America', Regular;
+        }
+
+        .intro {
+            padding: 20px;
+            font-size: 12pt;
+
+        }
+
+
+        .switcher-div {
+            display: flex;
+            align-items: center;
+            margin: 5px;
+            font-size: 12pt;
+        }
+
+        .switcher-div>div {
+            margin-left: 5px;
+        }
+
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 35px;
+            height: 15px;
+            border: 2px solid black;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            /* background-color: #ccc; */
+            -webkit-transition: 0.4s;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 15px;
+            width: 17px;
+            background-color: white;
+            -webkit-transition: 0.4s;
+            transition: 0.4s;
+        }
+
+        input:checked+.slider {
+            /* background-color: #2196f3; */
+        }
+
+        input:focus+.slider {
+            box-shadow: 0 0 1px #2196f3;
+        }
+
+        input:checked+.slider:before {
+            -webkit-transform: translateX(18px);
+            -ms-transform: translateX(18px);
+            transform: translateX(18px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            /* border-radius: 34px; */
+        }
+
+        .slider.round:before {
+            /* border-radius: 50%; */
+        }
+
+        #loading {
+            background-color: white;
+            position: absolute;
+            border-radius: 10px;
+            z-index: 10;
+            padding: 20px;
+            font-size: 20px;
+
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .mapboxgl-popup {
+            max-width: 450px !important;
+        }
+
+
+        .main {
+            display: flex;
+            flex-direction: row;
+            height: 100vh;
+        }
+
+        .left {
+            width: 270px;
+            max-width: 340px;
+            background-color: white;
+            padding: 10px;
+        }
+
+        .right {
+            flex: 1;
+        }
+
+        .left>.switcher-div {
+            border-top: 2px solid black;
+            padding: 15px 10px;
+
+        }
+
+        .left>.switcher-div:last-child {
+            border-bottom: 2px solid black;
+        }
+
+        .custom-popup .mapboxgl-popup-content {
+            background-color: aquamarine;
+        }
+
+        h2 {
+            padding: 0px;
+            margin: 5px 0px;
+            font-size: 20pt;
+            line-height: 25px;
+            font-family: 'OnTheRoad';
+        }
+
+        h3 {
+            padding: 0px;
+            margin: 0px;
+            font-size: 11pt;
+            font-weight: bold;
+            font-family: 'GTAmerica';
+            /* capital letters; */
+            text-transform: uppercase;
+
+        }
+
+        /* table no borders */
+        table {
+            margin-top: 20px;
+            border-collapse: collapse;
+            border-spacing: 0;
+            width: 100%;
+            font-size: 11pt;
+        }
+
+        table tr {
+            vertical-align: top;
+        }
+
+        table tr td:first-child {
+            padding-right: 25px;
+        }
+
+        .plus-button {
+            width: 30px;
+            height: 30px;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            border: 2px solid black;
+            border-right: none;
+            user-select: none;
+            font-size: 15pt;
+        }
+
+        .minus-button {
+            width: 30px;
+            height: 30px;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            border: 2px solid black;
+            user-select: none;
+            font-size: 15pt;
+        }
+
+        .city-marker {
+            background-color: white;
+            border: 2px solid black;
+            padding: 2px 10px 0px 10px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            justify-content: center;
+            font-family: 'GTAmerica';
+        }
+
+        .city-marker::before {
+            content: "";
+            display: inline-block;
+            width: 7px;
+            height: 7px;
+            margin-right: 5px;
+            margin-bottom: 3px;
+            background-color: black;
+        }
+
+        .menu-open {
+            display: none;
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 30px;
+            cursor: pointer;
+            z-index: 10;
+            background-color: white;
+            border-radius: 5px;
+            border: 1px solid gray;
+        }
+
+        /* .sidenav {
+            height: 100%;
+            width: 0;
+            position: fixed;
+            z-index: 1;
+            top: 0;
+            left: 0;
+            background-color: #f0f0f0;
+            overflow-x: hidden;
+            transition: 0.5s;
+            padding-top: 60px;
+        } */
+
+        @media (max-width: 768px) {
+            #infoDiv {
+                height: 100%;
+                width: 0;
+                position: fixed;
+                z-index: 1;
+                top: 0;
+                left: 0;
+                background-color: #f0f0f0;
+                overflow-x: hidden;
+                transition: 0.5s;
+                padding: 60px 0 0 0;
+            }
+
+            .menu-open {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                padding: 5px 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="menu-open" onclick="openNav()">&#9776;</div>
+
+
+    <div class="main">
+        <div class="left" id="infoDiv">
+            <div class="title">Immersive Spaces</div>
+            <div class="intro"> Immersive Spaces is a new program created by Villa Albertine in partnership with the
+                Institut Français (Paris) that pairs venues in the United States with France-based creators
+                distributors, producers and cultural institutions to foster collaboration around immersive art between
+                the two countries.
+            </div>
+        </div>
+        <div class="right">
+            <div id="map"></div>
+        </div>
+    </div>
+
+    <script>
+        const switchersEnableDiv = document.getElementById("infoDiv")
+        const sidenav = document.getElementById("sidenav")
+        const main = {
+            data: [],
+            filters: new Set(),
+            cities: [],
+            allCities: [],
+            cityMarkers: []
+        };
+
+        const colors = [
+            { color: "red", name: 'Art Gallery' },
+            { color: "green", name: 'Cultural & Social Center', fontColor: "white" },
+            // { color: "blue", name: 'Empty Space' },
+            { color: "yellow", name: 'Entertainment Venue' },
+            { color: "orange", name: 'Exhibitor', displayName: 'Exhibitors' },
+            { color: "pink", name: 'Gaming Space' },
+            { color: "violet", name: 'Museum' },
+            //{ color: "Purple", name: 'Retail Venue' },
+            { color: "Purple", name: 'Rental Venue', fontColor: "white" },
+            { color: "navy", name: 'Theather & Cinema', fontColor: "white" },
+            { color: "aqua", name: 'Festivals' }
+        ]
+
+        mapboxgl.accessToken = 'pk.eyJ1IjoiZ2FyYWdlc3RvcmllcyIsImEiOiJjbDd1ejUzZnQwNmdlM29vNnlwbzMydGFiIn0.QCfYzbFZjibYumdnCySUdw';
+        const map = new mapboxgl.Map({
+            container: 'map', // container ID
+            // Choose from Mapbox's core styles, or make your own style with Mapbox Studio
+            // style: 'mapbox://styles/garagestories/cl986sedr000b14pfcxo9sh6f', // style URL
+            style: 'mapbox://styles/garagestories/clfr8fwv000fe01p4yp1e0am6', // style URL
+            center: { lng: -94.87371135892903, lat: 40.96447646740185 }, // starting position [lng, lat]
+            zoom: 4.05, // starting zoom
+            // projection: 'globe' // display the map as a 3D globe
+            maxBounds: [[-126.3320097547937, 21.70752049224747], [-66.07750493180633, 53.2247669612951]]
+        });
+        map.addControl(new mapboxgl.NavigationControl());
+
+
+        map.on('style.load', () => {
+
+            map.setFilter("settlement-minor-label", ['in', 'name', ""])
+            map.setFilter("settlement-major-label", ['in', 'name', ""])
+            map.setFilter("settlement-major-label", ['in', 'name', ""])
+            map.setFilter("poi-label", ['in', 'name', ""]) //  remove poi
+
+
+            Promise.all([
+                fetch('data/cities.json').then(res => res.json()),
+                d3.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQBvstvSh5604AbKjeQj_WOpek94K868qD8LZZuz_cWUfG-cI5YYOfGLSje7ZP3ThUEqTUMa1INGNWV/pub?gid=1186833163&single=true&output=csv")
+            ])
+                .then(data => {
+                    console.log('data', data);
+
+                    const [allCities, json] = data;
+                    main.allCities = allCities
+
+                    const features = json.map(pin => {
+                        const { LATITUDE: lat, LONGITUDE: lon } = pin
+                        const color = colors.find(d => d.name.toLowerCase() === pin['VENUE TYPE'].toLowerCase())
+                        return turf.point([+lon, +lat], {
+                            color: color ? color.color : "black",
+                            icon_image: pin['VENUE TYPE'].toLowerCase() + "-u",
+                            ...pin
+                        })
+                    })
+                    const collection = turf.featureCollection(features)
+                    console.log('collection', collection);
+                    map.getSource("main").setData(collection)
+                    main.data.push(...features)
+
+
+
+                    const venue = [...new Set(json.map(pin => pin['VENUE TYPE']))]
+                    const cities = [...new Set(json.map(pin => pin.CITY))]
+
+                    main.cities.push(...cities)
+
+                    switchersEnableDiv.appendChild(buildSwitcher("Select All / Deselect All", checked => {
+                        document.getElementsByTagName("input")
+                        if (checked) {
+                            colors.forEach(d => main.filters.add(d.name))
+                            document.querySelectorAll(".checkbox").forEach(d => d.checked = true)
+                        } else {
+                            main.filters.clear()
+                            document.querySelectorAll(".checkbox").forEach(d => d.checked = false)
+                        }
+                        //update pins 
+                        const filteredPins = main.data.filter(d => main.filters.has(d.properties['VENUE TYPE'])).map(d => d)
+                        map.getSource("main").setData(turf.featureCollection(filteredPins))
+                    }, true))
+
+                    venue.map(d => {
+                        main.filters.add(d)
+                        console.log('d', d);
+                        switchersEnableDiv.appendChild(buildSwitcher(d, checked => {
+                            if (checked) {
+                                main.filters.add(d)
+                            } else {
+                                main.filters.delete(d)
+                            }
+                            //update pins 
+                            const filteredPins = main.data.filter(d => main.filters.has(d.properties['VENUE TYPE'])).map(d => d)
+                            map.getSource("main").setData(turf.featureCollection(filteredPins))
+                        }, true))
+                    })
+
+                    // map.setFilter("settlement-minor-label", ['in', 'name', ...cities])
+
+
+                    const buttonDiv = document.createElement("div")
+                    buttonDiv.style = "display: flex; flex-direction: row;border-top: 2px solid black;padding:15px;"
+
+                    const plus = document.createElement("div")
+                    plus.className = "plus-button"
+                    plus.innerHTML = "+"
+                    plus.addEventListener("click", () => {
+                        map.flyTo({
+                            center: map.getCenter(),
+                            zoom: map.getZoom() + 1,
+                            essential: true // this animation is considered essential with respect to prefers-reduced-motion
+                        });
+                    })
+                    const minus = document.createElement("div")
+                    minus.className = "minus-button"
+                    minus.innerHTML = "-"
+                    minus.addEventListener("click", () => {
+                        map.flyTo({
+                            center: map.getCenter(),
+                            zoom: map.getZoom() - 1,
+                            essential: true // this animation is considered essential with respect to prefers-reduced-motion
+                        });
+                    })
+                    buttonDiv.appendChild(plus)
+                    buttonDiv.appendChild(minus)
+                    switchersEnableDiv.appendChild(buttonDiv)
+
+
+
+                    //---------- allCities markers -----------
+                    const lowercaseCities = main.cities.filter(d => d.length > 2).map(d => d.toLowerCase().trim())
+                    console.log('lowercaseCities', lowercaseCities);
+                    const mapCities = main.allCities.filter(d => {
+                        return lowercaseCities.includes(d.city.toLowerCase().trim())
+                    }).map(c => {
+                        const el = document.createElement('div');
+                        el.className = 'city-marker';
+                        el.textContent = c.city;
+                        el.addEventListener("click", (e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            map.flyTo({
+                                center: [+c.longitude, +c.latitude],
+                                zoom: 13,
+                                essential: true // this animation is considered essential with respect to prefers-reduced-motion
+                            });
+                        })
+                        const { x, y } = el.getBoundingClientRect()
+
+                        const marker = new mapboxgl.Marker(el, {
+                            offset: [-16, 0],
+                            anchor: "left"
+                        })
+                            .setLngLat([+c.longitude, +c.latitude])
+                            .addTo(map);
+
+
+                        // new mapboxgl.Marker()
+                        //     .setLngLat([+c.longitude, +c.latitude])
+                        //     .addTo(map);
+
+                        return marker
+                    })
+                    main.cityMarkers.push(...mapCities)
+
+                    console.log('mapCities', mapCities);
+                })
+
+
+            //generate png image 20x20 for each icon
+            colors.forEach(d => {
+                console.log('d', d);
+                const canvas = document.createElement('canvas');
+                canvas.width = 20;
+                canvas.height = 20;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = d.color;
+                ctx.fillRect(0, 0, 20, 20);
+                map.loadImage(canvas.toDataURL(), (error, image) => {
+                    if (error) throw error;
+                    map.addImage(d.name, image);
+                })
+            })
+
+            map.addSource('main', {
+                'type': 'geojson',
+                'data': {
+                    'type': 'FeatureCollection',
+                    'features': []
+                }
+            });
+            // map.addLayer({
+            //     'id': 'pins',
+            //     'type': 'circle',
+            //     'source': 'main',
+            //     'paint': {
+            //         'circle-radius': 12,
+            //         "circle-color": ['get', 'color'],
+            //         "circle-stroke-color": "#0266ff",
+            //         'circle-stroke-width': 3
+            //     },
+            // }, 'settlement-minor-label');
+
+            map.addLayer({
+                'id': 'pins',
+                'type': 'symbol',
+                'source': 'main', // reference the data source
+                'layout': {
+                    'icon-image': ['get', 'VENUE TYPE'],
+                    'icon-size': 0.85,
+                    'icon-allow-overlap': true,
+                }
+            }, 'settlement-minor-label');
+
+
+            map.on('click', 'pins', (e) => {
+                // Copy coordinates array.
+                const coordinates = [+e.features[0].properties['LONGITUDE'], +e.features[0].properties['LATITUDE']];
+                const data = e.features[0].properties;
+
+                console.log('e', coordinates);
+                console.log('e', e.features[0].properties);
+
+                // Ensure that if the map is zoomed out such that multiple
+                // copies of the feature are visible, the popup appears
+                // over the copy being pointed to.
+
+                const info = [
+                    'CONTACT',
+                    'CITY',
+                    'DIMENSION',
+                    'PAST EXHIBITIONS',
+                    'PARTNERS',
+                    'INFO'
+                ]
+
+                const infoData = Object.entries(data).filter(d => d[1] && d[1] !== "" && info.includes(d[0])).map(d => {
+                    return `<div>${d[0]}: ${d['1']}</div>`
+                }).join("")
+                const description = `
+                    <div style="padding:15px;overflow:hidden">
+                        <h2>${data['NAME VENUE']}</h2>
+                        <h3>${data['VENUE TYPE']}</h3>
+
+                        <table class="table">
+                            <tr>
+                                <td>ADDRESS</td>
+                                <td>${data['ADDRESS']}</td>
+                            </tr>
+                            <tr>
+                                <td>WEBSITE</td>
+                                <td><a style="color:inherit; text-decoration:none" href="${data['WEBSITE']}" target="_blank">${data['WEBSITE']}</a></td>
+                            </tr>
+                            <tr>
+                                <td>CONTACT</td>
+                                <td>${data['CONTACT']}</td>
+                            </tr>
+                            <tr>
+                                <td>CITY</td>
+                                <td>${data['CITY']}</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                `
+                new mapboxgl.Popup({ className: data.color, offset: [0, -15] })
+                    .setLngLat(coordinates)
+                    .setHTML(description)
+                    .addTo(map);
+
+                map.flyTo({
+                    center: coordinates,
+                    zoom: 14
+                });
+            });
+
+            map.on("zoom", () => {
+                const zoom = map.getZoom()
+                main.cityMarkers.forEach(d => zoom > 10 ? d.remove() : d.addTo(map))
+            })
+
+            map.on('mouseenter', 'pins', () => {
+                map.getCanvas().style.cursor = 'pointer';
+            });
+            // Change it back to a pointer when it leaves.
+            map.on('mouseleave', 'pins', () => {
+                map.getCanvas().style.cursor = '';
+            });
+
+            // map.on('click', 'settlement-minor-label', (e) => {
+            //     map.flyTo({
+            //         center: e.features[0].geometry.coordinates,
+            //         zoom: 14
+            //     });
+            // });
+            // map.on('mouseenter', 'settlement-minor-label', () => {
+            //     map.getCanvas().style.cursor = 'pointer';
+            // });
+            // // Change it back to a pointer when it leaves.
+            // map.on('mouseleave', 'settlement-minor-label', () => {
+            //     map.getCanvas().style.cursor = '';
+            // });
+        });
+
+        function fillDropDown(data, action) {
+            console.log('data', data);
+            const selectList = document.createElement("select");
+            selectList.id = "mySelect";
+            infoDiv.appendChild(selectList)
+            selectList.addEventListener("change", d => {
+                const id = selectList.value
+                if (typeof action === "function") {
+                    action(id)
+                }
+            })
+            data
+                .sort((a, b) => a.localeCompare(b))
+                .map(p => {
+                    const option = document.createElement("option");
+                    option.value = p;
+                    option.text = p;
+                    selectList.appendChild(option);
+                })
+
+        }
+
+        function buildSwitcher(labelText, action, checked = true) {
+
+            const div = document.createElement("div")
+            div.className = "switcher-div"
+
+            const label = document.createElement("label")
+            label.className = "switch"
+
+            const checkbox = document.createElement("input")
+            checkbox.type = "checkbox"
+            checkbox.className = "checkbox"
+            checkbox.checked = checked
+            checkbox.addEventListener("input", () => {
+                if (typeof action === "function") {
+                    action(checkbox.checked)
+                }
+            })
+
+            const span = document.createElement("span")
+            span.className = "slider round"
+
+            const pinColor = colors.find(d => d.name.toLowerCase() === labelText.toLowerCase())
+
+            // const color = document.createElement("div")
+            // color.style.width = "10px"
+            // color.style.height = "10px"
+            // color.style.backgroundColor = bgColor
+
+            const bgColor = pinColor ? pinColor.color : "black"
+            const bgFontColor = pinColor ? pinColor.fontColor : "black"
+            document.body.appendChild(Object.assign(document.createElement("style"), {
+                textContent: `
+                .${bgColor}:before {background-color: ${bgColor} !important}
+                .${bgColor} .mapboxgl-popup-content {background-color: ${bgColor} !important; color: ${bgFontColor} !important}
+                .${bgColor} .mapboxgl-popup-tip {border: none !important}
+                .${bgColor} .mapboxgl-popup-close-button {font-size: 34px; font-family: serif; color: ${bgFontColor} !important}
+                `
+            }))
+            span.classList.add(bgColor)
+
+            const text = document.createElement("div")
+            text.innerText = pinColor && pinColor.displayName ? pinColor.displayName : labelText
+
+            label.appendChild(checkbox)
+            label.appendChild(span)
+
+            div.appendChild(label)
+            div.appendChild(text)
+
+
+            return div
+        }
+
+
+
+        function replaceAccentedCharacters(str) {
+            let accentedChars = {
+                'á': 'a',
+                'à': 'a',
+                'ã': 'a',
+                'â': 'a',
+                'é': 'e',
+                'è': 'e',
+                'ê': 'e',
+                'í': 'i',
+                'ì': 'i',
+                'î': 'i',
+                'ó': 'o',
+                'ò': 'o',
+                'õ': 'o',
+                'ô': 'o',
+                'ú': 'u',
+                'ù': 'u',
+                'û': 'u',
+                'ç': 'c'
+            };
+            return str.replace(/[áàãâéèêíìîóòõôúùûç]/gi, function (matched) {
+                return accentedChars[matched];
+            });
+        }
+
+        function openNav() {
+            const { width } = switchersEnableDiv.getBoundingClientRect()
+            switchersEnableDiv.style.width = width > 300 ? "0" : "350px";
+        }
+
+
+    </script>
+
+</body>
+
+</html>
