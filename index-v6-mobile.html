@@ -387,7 +387,8 @@
 
             Promise.all([
                 fetch('data/cities.json').then(res => res.json()),
-                d3.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQBvstvSh5604AbKjeQj_WOpek94K868qD8LZZuz_cWUfG-cI5YYOfGLSje7ZP3ThUEqTUMa1INGNWV/pub?gid=1186833163&single=true&output=csv")
+                //d3.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQBvstvSh5604AbKjeQj_WOpek94K868qD8LZZuz_cWUfG-cI5YYOfGLSje7ZP3ThUEqTUMa1INGNWV/pub?gid=1186833163&single=true&output=csv")
+                  d3.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vTlKBbNtJ1fn1xYnuSBbhEu3HliPH-Yu9WE2zETjCkX6BUAcY3Rxx4RVwB3HzU40pKflQ6MjuQLBtqI/pub?output=csv")
             ])
                 .then(data => {
                     console.log('data', data);
